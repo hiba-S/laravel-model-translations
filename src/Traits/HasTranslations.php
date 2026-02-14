@@ -238,13 +238,9 @@ trait HasTranslations
         Builder::macro('whereTranslation', function ($attribute, $operatorOrValue, $value = null, $lang = null) {
             $lang = $lang ?: app()->getLocale();
 
-            if (func_num_args() === 3) {
-                $operator = '=';
-                $val = $operatorOrValue;
-            } else {
-                $operator = $operatorOrValue;
-                $val = $value;
-            }
+            [$operator, $val] = $value === null
+                ? ['=', $operatorOrValue]
+                : [$operatorOrValue, $value];
 
             return $this->whereHas('translations', function ($query) use ($attribute, $operator, $val, $lang) {
                 $query->where('lang', $lang)
@@ -254,13 +250,9 @@ trait HasTranslations
 
         // Add macro for any-locale translation
         Builder::macro('whereAnyTranslation', function ($attribute, $operatorOrValue, $value = null) {
-            if (func_num_args() === 2) {
-                $operator = '=';
-                $val = $operatorOrValue;
-            } else {
-                $operator = $operatorOrValue;
-                $val = $value;
-            }
+            [$operator, $val] = $value === null
+                ? ['=', $operatorOrValue]
+                : [$operatorOrValue, $value];
 
             return $this->whereHas('translations', function ($query) use ($attribute, $operator, $val) {
                 $query->where($attribute, $operator, $val);
@@ -270,13 +262,9 @@ trait HasTranslations
         Builder::macro('orWhereTranslation', function ($attribute, $operatorOrValue, $value = null, $lang = null) {
             $lang = $lang ?: app()->getLocale();
 
-            if (func_num_args() === 3) {
-                $operator = '=';
-                $val = $operatorOrValue;
-            } else {
-                $operator = $operatorOrValue;
-                $val = $value;
-            }
+            [$operator, $val] = $value === null
+                ? ['=', $operatorOrValue]
+                : [$operatorOrValue, $value];
 
             return $this->orWhereHas('translations', function ($query) use ($attribute, $operator, $val, $lang) {
                 $query->where('lang', $lang)
@@ -285,13 +273,9 @@ trait HasTranslations
         });
 
         Builder::macro('orWhereAnyTranslation', function ($attribute, $operatorOrValue, $value = null) {
-            if (func_num_args() === 2) {
-                $operator = '=';
-                $val = $operatorOrValue;
-            } else {
-                $operator = $operatorOrValue;
-                $val = $value;
-            }
+            [$operator, $val] = $value === null
+                ? ['=', $operatorOrValue]
+                : [$operatorOrValue, $value];
 
             return $this->orWhereHas('translations', function ($query) use ($attribute, $operator, $val) {
                 $query->where($attribute, $operator, $val);
