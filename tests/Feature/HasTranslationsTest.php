@@ -450,3 +450,59 @@ it('throws when translation attribute is not an array', function () {
         "The 'name' attribute must be an array"
     );
 });
+
+// ============================================================
+// getAttribute() — access via relationship
+// ============================================================
+
+it('returns translation when accessed through a relationship', function () {
+    $product = makeProduct([
+        'name' => ['en' => 'Laptop', 'fr' => 'Ordinateur'],
+    ]);
+
+    // Simulate accessing the model through a relationship (translations not eager loaded)
+    $freshProduct = Product::withoutGlobalScope('withTranslations')
+        ->find($product->id);
+
+    app()->setLocale('fr');
+    expect($freshProduct->name)->toBe('Ordinateur');
+});
+
+it('lazy loads translations when not already loaded via getAttribute', function () {
+    $product = makeProduct(['name' => ['en' => 'Laptop']]);
+
+    $freshProduct = Product::withoutGlobalScope('withTranslations')
+        ->find($product->id);
+
+    expect($freshProduct->relationLoaded('translations'))->toBeFalse();
+
+    app()->setLocale('en');
+    $freshProduct->name; // triggers getAttribute
+
+    expect($freshProduct->relationLoaded('translations'))->toBeTrue();
+});
+
+it('returns _translations accessor when accessed through a relationship', function () {
+    $product = makeProduct([
+        'name' => ['en' => 'Laptop', 'fr' => 'Ordinateur'],
+    ]);
+
+    $freshProduct = Product::withoutGlobalScope('withTranslations')
+        ->find($product->id);
+
+    expect($freshProduct->name_translations)
+        ->toHaveKeys(['en', 'fr'])
+        ->and($freshProduct->name_translations['fr'])->toBe('Ordinateur');
+});
+
+it('does not re-query when translations are already loaded via getAttribute', function () {
+    $product = makeProduct(['name' => ['en' => 'Laptop']]);
+
+    $freshProduct = Product::withoutGlobalScope('withTranslations')
+        ->find($product->id);
+
+    // Access twice — should not re-query
+    $freshProduct->name;
+
+    expect($freshProduct->relationLoaded('translations'))->toBeTrue();
+});
