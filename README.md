@@ -87,6 +87,7 @@ echo $product->name; // "Ordinateur"
 - 💾 **Transactional CRUD** — All operations wrapped in database transactions
 - 🎯 **Convention over configuration** — Auto-resolves translation model names
 - ⚡ **Eager loading** — Configurable auto-eager-loading via global scope
+- 🛠️ **Artisan command** — Scaffold translated models with a single command
 
 ---
 
@@ -110,6 +111,88 @@ return [
     'fallback'  => 'app', // Fallback strategy: null, 'app', or 'first'
 ];
 ```
+
+---
+
+## Artisan Command
+
+The package ships with a `translations:make-model` command that scaffolds everything you need in one step: the main model, the translation model (in the `Translations` sub-namespace), and optionally a migration and resource controller.
+
+### Basic Usage
+
+```bash
+php artisan translations:make-model Product
+```
+
+This creates:
+- `app/Models/Product.php` — with `HasTranslations` trait and `$translatable` property pre-configured
+- `app/Models/Translations/ProductTranslation.php` — with `$fillable` set to `['product_id', 'lang']`
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--m`  | Create migrations for both the main model and its translation table |
+| `--r`  | Create a resource controller for the main model |
+| `--mr` | Create both migration and resource controller |
+
+```bash
+# With migration
+php artisan translations:make-model Product --m
+
+# With resource controller
+php artisan translations:make-model Product --r
+
+# With both
+php artisan translations:make-model Product --mr
+```
+
+### What Gets Generated
+
+**When `--m` is used**, the translation migration is pre-filled with the expected structure:
+
+```php
+Schema::create('product_translations', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('product_id')
+        ->constrained()
+        ->cascadeOnDelete();
+
+    $table->string('lang');
+    $table->timestamps();
+});
+```
+
+You only need to add your translatable columns (e.g. `name`, `description`) — the foreign key, `lang`, and timestamps are already there.
+
+**The main model** is set up with the trait and empty stubs ready to fill:
+
+```php
+use HibaSabouh\ModelTranslations\Traits\HasTranslations;
+
+class Product extends Model
+{
+    use HasTranslations;
+
+    protected $fillable = [];
+
+    protected $translatable = [];
+}
+```
+
+**The translation model** has `$fillable` bootstrapped with the foreign key and locale columns:
+
+```php
+class ProductTranslation extends Model
+{
+    protected $fillable = [
+        'product_id',
+        'lang',
+    ];
+}
+```
+
+> After running the command, add your translatable column names to both the migration and the `$fillable` / `$translatable` arrays.
 
 ---
 
@@ -375,11 +458,6 @@ The 'name' attribute must be an array of translations in the format: ['locale' =
 
 ```bash
 composer test
-```
-
-Run tests with coverage:
-```bash
-composer test -- --coverage
 ```
 
 ---

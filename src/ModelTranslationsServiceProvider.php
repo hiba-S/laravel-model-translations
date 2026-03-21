@@ -21,5 +21,12 @@ class ModelTranslationsServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../config/translatable.php' => config_path('translatable.php'),
         ], 'translatable-config');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \HibaSabouh\ModelTranslations\Commands\MakeTranslatedModelCommand::class,
+            ]);
+        }
+
     }
 }
